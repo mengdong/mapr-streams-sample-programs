@@ -6,6 +6,9 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader
 import java.util.Properties;
 
 /**
@@ -17,8 +20,7 @@ import java.util.Properties;
 public class Producer {
     public static void main(String[] args) throws IOException {
 
-        final String TOPIC_FAST_MESSAGES = "/sample-stream:fast-messages";
-        final String TOPIC_SUMMARY_MARKERS = "/sample-stream:summary-markers";
+        final String SENSOR0101 = "/sample-stream:sensor1-region1";
 
         // set up the producer
         KafkaProducer<String, String> producer;
@@ -28,25 +30,31 @@ public class Producer {
             producer = new KafkaProducer<>(properties);
         }
       
-      try {
-            for (int i = 0; i < 1000000; i++) {
-                // send lots of messages
+        try {
+            FileInputStream fstream = new FileInputStream("/mapr/demo.mapr.com/user/mapr/ethylene_methane_2.csv");
+            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+            String strLine;
+            Integer i = 0;
+            // Read File Line By Line
+            while ((strLine = br.readLine()) != null)   {
+                i++;
                 producer.send(new ProducerRecord<String, String>(
-                        TOPIC_FAST_MESSAGES,
-                        String.format("{\"type\":\"test\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
+                        SENSOR0101,
+                        strLine));
 
                 // every so often send to a different topic
                 if (i % 1000 == 0) {
-                    producer.send(new ProducerRecord<String, String>(
-                            TOPIC_FAST_MESSAGES,
-                            String.format("{\"type\":\"marker\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
-                    producer.send(new ProducerRecord<String, String>(
-                            TOPIC_SUMMARY_MARKERS,
-                            String.format("{\"type\":\"other\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)));
                     producer.flush();
                     System.out.println("Sent msg number " + i);
                 }
+
+                Thread.sleep(10);
             }
+
+            // Close the input stream
+            br.close();
+
         } catch (Throwable throwable) {
             System.out.printf("%s", throwable.getStackTrace());
         } finally {
