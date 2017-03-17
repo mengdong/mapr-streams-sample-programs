@@ -31,7 +31,7 @@ public class Producer {
         }
       
         try {
-            FileInputStream fstream = new FileInputStream("/mapr/demo.mapr.com/user/mapr/ethylene_methane_2.csv");
+            FileInputStream fstream = new FileInputStream("./ethylene.csv");
             BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
             String strLine;
